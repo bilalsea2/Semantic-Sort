@@ -1,6 +1,6 @@
 # Semantic Match Algorithm
 
-A semantic matching algorithm used to rank user-submitted sentences based on their embedding similarity. The exact same algorithm we came up for [Up2Mates](https://github.com/ha-wq/up2mates) (currently, [Xalqa](t.me/xalqauzbot)).
+A semantic matching algorithm used to rank user-submitted sentences based on their embedding similarity. The exact same algorithm we came up for [Up2Mates](https://github.com/ha-wq/up2mates) (currently, [Xalqa](https://t.me/xalqauzbot)).
 
 ## Play around with the algorithm!
 
