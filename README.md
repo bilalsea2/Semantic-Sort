@@ -4,7 +4,7 @@ A semantic matching algorithm used to rank user-submitted sentences based on the
 
 ## Play around with the algorithm!
 
-For a step-by-step local build guide, see the [USAGE.md](USAGE.md) file.
+For a step-by-step local build guide, see the [USAGE](USAGE.md) file.
 
 Or, [click here](https://semantic-sort.onrender.com/) 
 
