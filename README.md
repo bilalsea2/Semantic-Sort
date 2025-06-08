@@ -2,6 +2,14 @@
 
 A semantic matching algorithm used to rank user-submitted sentences based on their embedding similarity. The exact same algorithm we came up for [Up2Mates](https://github.com/ha-wq/up2mates) (currently, [Xalqa](t.me/xalqauzbot)).
 
+## Play around with the algorithm!
+
+For a step-by-step local build guide, see the [USAGE.md](USAGE.md) file.
+
+Or, [click here](https://semantic-sort.onrender.com/) 
+
+*app is deployed on Render's free tier; if you want to see cool stuff coming, leave a star (o|*
+
 ## Algorithm Steps
 
 1. **Data Representation**
