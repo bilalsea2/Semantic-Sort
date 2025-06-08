@@ -1,0 +1,148 @@
+/* static/style.css */
+
+/* ─── Color Palette ─────────────────────────────────────────────────────────── */
+:root {
+  --pink-strong: #FF90BB;
+  --pink-soft:   #FFC1DA;
+  --cream:       #F8F8E1;
+  --teal:        #8ACCD5;
+  --text-dark:   #333;
+  --bg-light:    #FFFFFF;
+}
+
+/* ─── Global Styles ─────────────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--cream);
+  color: var(--text-dark);
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  background-color: var(--bg-light);
+  border: 2px solid var(--pink-soft);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+}
+
+/* ─── Heading ──────────────────────────────────────────────────────────────── */
+h1 {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: var(--teal);
+}
+
+/* ─── Input Form ───────────────────────────────────────────────────────────── */
+.input-form {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.input-label {
+  font-size: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.input-label input {
+  border: 2px solid var(--pink-strong);
+  border-radius: 8px;
+  padding: 0.4rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+.input-label input:focus {
+  border-color: var(--teal);
+}
+
+.submit-btn {
+  background-color: var(--pink-strong);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submit-btn:hover {
+  background-color: var(--pink-soft);
+}
+
+/* ─── Tabs ─────────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.tab-button {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--teal);
+  border-radius: 8px;
+  background-color: var(--bg-light);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.tab-button.active {
+  background-color: var(--teal);
+  color: #fff;
+}
+
+/* ─── List Sections ─────────────────────────────────────────────────────────── */
+.list-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--pink-soft);
+  border-radius: 8px;
+  border: 1px solid var(--pink-strong);
+}
+
+.list-section.hidden {
+  display: none;
+}
+
+.list-section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-dark);
+}
+
+.list-section ul {
+  list-style: none;
+}
+
+.list-section li {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--cream);
+  font-size: 0.95rem;
+}
+
+.list-section li:last-child {
+  border-bottom: none;
+}
+
+.empty-message {
+  font-style: italic;
+  color: var(--text-dark);
+}

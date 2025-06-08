@@ -1,0 +1,86 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Semantic Playground</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Semantic Match Playground</h1>
+
+    <!-- ─── Input Form ─────────────────────────────────────────────────────────── -->
+    <form method="POST" class="input-form">
+      <label class="input-label">
+        I am 
+        <input
+          type="text"
+          name="user_text"
+          placeholder="panda and I LOVE bamboos"
+          required
+        />
+      </label>
+      <button type="submit" class="submit-btn">Submit</button>
+    </form>
+
+    <!-- ─── Tabs: Original vs. Semantic ──────────────────────────────────────────── -->
+    <div class="tabs">
+      <button id="tab-original" class="tab-button active">🕒 Original Order</button>
+      <button id="tab-semantic" class="tab-button">💡 Semantic Order</button>
+    </div>
+
+    <!-- ─── Original List (Chronological) ──────────────────────────────────────── -->
+    <div id="original-list" class="list-section">
+      <h2>Original (Chronological)</h2>
+      {% if original_list %}
+        <ul>
+          {% for txt in original_list %}
+            <li>{{ txt }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-message">No one has submitted yet. Be the first!</p>
+      {% endif %}
+    </div>
+
+    <!-- ─── Semantic List (After Submit) ────────────────────────────────────────── -->
+    <div id="semantic-list" class="list-section hidden">
+      <h2>Semantic Order (Closest ➝ Furthest)</h2>
+      {% if sorted_list %}
+        <ul>
+          {% for txt in sorted_list %}
+            <li>{{ txt }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-message">Submit above to see semantically related inputs.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    // Simple tab-switching logic:
+    const tabOriginal   = document.getElementById('tab-original');
+    const tabSemantic   = document.getElementById('tab-semantic');
+    const originalSection = document.getElementById('original-list');
+    const semanticSection = document.getElementById('semantic-list');
+
+    tabOriginal.addEventListener('click', () => {
+      tabOriginal.classList.add('active');
+      tabSemantic.classList.remove('active');
+      originalSection.classList.remove('hidden');
+      semanticSection.classList.add('hidden');
+    });
+
+    tabSemantic.addEventListener('click', () => {
+      tabSemantic.classList.add('active');
+      tabOriginal.classList.remove('active');
+      semanticSection.classList.remove('hidden');
+      originalSection.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>
