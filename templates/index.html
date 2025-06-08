@@ -1,86 +1,104 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Semantic Playground</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Semantic Playground (Supabase)</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
-
 <body>
   <div class="container">
     <h1>Semantic Match Playground</h1>
 
-    <!-- ─── Input Form ─────────────────────────────────────────────────────────── -->
+    <!-- Input Form -->
     <form method="POST" class="input-form">
       <label class="input-label">
-        I am 
-        <input
-          type="text"
-          name="user_text"
-          placeholder="panda and I LOVE bamboos"
-          required
-        />
+        I am
+        <input type="text" name="part1" placeholder="e.g. panda" required />
+        and I LOVE
+        <input type="text" name="part2" placeholder="e.g. bamboos" required />
       </label>
       <button type="submit" class="submit-btn">Submit</button>
     </form>
 
-    <!-- ─── Tabs: Original vs. Semantic ──────────────────────────────────────────── -->
+    <!-- Sentence Selector -->
+    {% if original_list %}
+    <form method="GET" class="selector-form">
+      <label>Select for Semantic Order:</label>
+      <select name="query_id" onchange="this.form.submit()">
+        {% for rec in original_list %}
+          <option value="{{ rec.id }}" {% if rec.id == selected_id %}selected{% endif %}>
+            {{ rec.text }}
+          </option>
+        {% endfor %}
+      </select>
+    </form>
+    {% endif %}
+
+    <!-- Tabs -->
     <div class="tabs">
       <button id="tab-original" class="tab-button active">🕒 Original Order</button>
       <button id="tab-semantic" class="tab-button">💡 Semantic Order</button>
     </div>
 
-    <!-- ─── Original List (Chronological) ──────────────────────────────────────── -->
+    <!-- Original List -->
     <div id="original-list" class="list-section">
       <h2>Original (Chronological)</h2>
-      {% if original_list %}
-        <ul>
-          {% for txt in original_list %}
-            <li>{{ txt }}</li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="empty-message">No one has submitted yet. Be the first!</p>
-      {% endif %}
+      <ul>
+        {% for rec in original_list %}
+        <li class="item-row">
+          {{ rec.text }}
+          <form method="POST" action="{{ url_for('delete', record_id=rec.id) }}" class="delete-form">
+            <button type="submit" class="delete-btn">✖</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
 
-    <!-- ─── Semantic List (After Submit) ────────────────────────────────────────── -->
+    <!-- Semantic List -->
     <div id="semantic-list" class="list-section hidden">
       <h2>Semantic Order (Closest ➝ Furthest)</h2>
-      {% if sorted_list %}
-        <ul>
-          {% for txt in sorted_list %}
-            <li>{{ txt }}</li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="empty-message">Submit above to see semantically related inputs.</p>
-      {% endif %}
+      <ul>
+        {% for rec in sorted_list %}
+        <li class="item-row">
+          {{ rec.text }}
+          <form method="POST" action="{{ url_for('delete', record_id=rec.id) }}" class="delete-form">
+            <button type="submit" class="delete-btn">✖</button>
+          </form>
+        {% endfor %}
+      </ul>
     </div>
   </div>
 
   <script>
-    // Simple tab-switching logic:
-    const tabOriginal   = document.getElementById('tab-original');
-    const tabSemantic   = document.getElementById('tab-semantic');
-    const originalSection = document.getElementById('original-list');
-    const semanticSection = document.getElementById('semantic-list');
+    const tabOriginal = document.getElementById("tab-original");
+    const tabSemantic = document.getElementById("tab-semantic");
+    const originalSection = document.getElementById("original-list");
+    const semanticSection = document.getElementById("semantic-list");
 
-    tabOriginal.addEventListener('click', () => {
-      tabOriginal.classList.add('active');
-      tabSemantic.classList.remove('active');
-      originalSection.classList.remove('hidden');
-      semanticSection.classList.add('hidden');
-    });
+    function showOriginal() {
+      tabOriginal.classList.add("active");
+      tabSemantic.classList.remove("active");
+      originalSection.classList.remove("hidden");
+      semanticSection.classList.add("hidden");
+    }
+    function showSemantic() {
+      tabSemantic.classList.add("active");
+      tabOriginal.classList.remove("active");
+      semanticSection.classList.remove("hidden");
+      originalSection.classList.add("hidden");
+    }
 
-    tabSemantic.addEventListener('click', () => {
-      tabSemantic.classList.add('active');
-      tabOriginal.classList.remove('active');
-      semanticSection.classList.remove('hidden');
-      originalSection.classList.add('hidden');
-    });
+    tabOriginal.addEventListener("click", showOriginal);
+    tabSemantic.addEventListener("click", showSemantic);
   </script>
+  {% if sorted_list %}
+  <script>
+    // If Python passed a non-empty sorted_list, jump straight to Semantic
+    showSemantic();
+  </script>
+  {% endif %}
+
 </body>
 </html>

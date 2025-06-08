@@ -1,148 +1,124 @@
-# main.py
-
-from flask import Flask, request, render_template, redirect, url_for
-from supabase import create_client, Client
 import os
+from flask import Flask, request, render_template, redirect, url_for
+from sentence_transformers import SentenceTransformer
 import numpy as np
-import requests
-from datetime import datetime
+from supabase import create_client
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("Please set SUPABASE_URL and SUPABASE_KEY environment variables.")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 app = Flask(__name__)
+model = SentenceTransformer("paraphrase-MiniLM-L3-v2")
 
-# ────────── 1) Load environment variables ────────────────────────────────────
-# (We will set these in Windows; see Section 5)
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-HF_API_TOKEN = os.getenv("HF_API_TOKEN")  # Hugging Face Inference API token
-# (optionally check that they're present)
-if not (SUPABASE_URL and SUPABASE_KEY and HF_API_TOKEN):
-    raise RuntimeError("Missing one of: SUPABASE_URL, SUPABASE_KEY, HF_API_TOKEN")
 
-# ────────── 2) Initialize Supabase client ────────────────────────────────────
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-# ────────── 3) Hugging Face Embedding Function ───────────────────────────────
-# We will use the official HF embedding endpoint. You can choose any sentence-transformer model 
-# that’s hosted on Hugging Face (e.g., "sentence-transformers/paraphrase-MiniLM-L3-v2").
-HF_MODEL_ID = "sentence-transformers/paraphrase-MiniLM-L3-v2"
-HF_EMBED_URL = f"https://api-inference.huggingface.co/embeddings/{HF_MODEL_ID}"
-
-def get_hf_embedding(text: str) -> list[float]:
-    """
-    Calls the Hugging Face embeddings endpoint and returns a list of floats.
-    Requires env var HF_API_TOKEN.
-    """
-    headers = {
-        "Authorization": f"Bearer {HF_API_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    payload = {"inputs": text}
-    
-    response = requests.post(HF_EMBED_URL, headers=headers, json=payload)
-    if response.status_code != 200:
-        raise RuntimeError(f"Hugging Face API error {response.status_code}: {response.text}")
-    
-    data = response.json()
-    # For the embeddings endpoint, HF returns {"embedding": [..list of floats..]}
-    if "embedding" in data:
-        return data["embedding"]
+def fetch_all_records():
+    resp = supabase.table("entries").select("id, text, embedding").order("id", desc=False).execute()
+    data = None
+    error = None
+    if isinstance(resp, str):
+        payload = json.loads(resp)
+        data = payload.get("data", [])
+        error = payload.get("error")
+    elif isinstance(resp, dict):
+        data = resp.get("data", [])
+        error = resp.get("error")
     else:
-        # Some endpoints return {"data": [ [..floats..] ]}, but in practice the HF Embedding API 
-        # returns a top-level "embedding" key. If yours differs, adjust accordingly.
-        raise RuntimeError(f"Unexpected response format from HF: {data}")
+        data = getattr(resp, "data", [])
+        error = getattr(resp, "error", None)
+    if error:
+        raise RuntimeError(f"Supabase fetch error: {error}")
+    return data
 
-# ────────── 4) Flask routing ───────────────────────────────────────────────────
+
+def insert_record(text: str, embedding: list[float]):
+    resp = supabase.table("entries").insert({"text": text, "embedding": embedding}).execute()
+    data = None
+    error = None
+    if isinstance(resp, str):
+        payload = json.loads(resp)
+        data = payload.get("data", [])
+        error = payload.get("error")
+    elif isinstance(resp, dict):
+        data = resp.get("data", [])
+        error = resp.get("error")
+    else:
+        data = getattr(resp, "data", [])
+        error = getattr(resp, "error", None)
+    if error:
+        raise RuntimeError(f"Supabase insert error: {error}")
+    if not data:
+        raise RuntimeError("Insert succeeded but no data returned.")
+    return data[0]
+
+
+def delete_record(record_id: int):
+    # Deletes by id
+    resp = supabase.table("entries").delete().eq("id", record_id).execute()
+    # similar response handling
+    if hasattr(resp, 'error') and resp.error:
+        raise RuntimeError(f"Supabase delete error: {resp.error}")
+    if isinstance(resp, dict) and resp.get("error"):
+        raise RuntimeError(f"Supabase delete error: {resp.get('error')}")
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
-    """
-    On GET:
-      - Fetch all entries from Supabase (ordered by created_at ASC)
-      - Render the template with original_list only; sorted_list remains empty.
+    data = fetch_all_records()
+    original_list = data.copy()  # list of dicts
+    sorted_list = []
+    selected_id = request.values.get("query_id", type=int)
 
-    On POST:
-      - Read user_text from form
-      - Compute HF embedding
-      - Insert into Supabase table `entries`
-      - Fetch ALL entries again, build:
-          • original_list  (chronological)
-          • sorted_list    (semantic order relative to the new entry)
-      - Render the template with both lists.
-    """
-    # 1) Fetch all existing entries from Supabase
-    #    We only need text + embedding; order by created_at ascending (oldest→newest).
-    supa_resp = (
-        supabase
-        .table("entries")
-        .select("id, text, embedding, created_at")
-        .order("created_at", {"ascending": True})
-        .execute()
-    )
-    data = supa_resp.data  # This is a list of dicts: { "id": "...", "text": "...", "embedding": [...], "created_at": "..." }
+    # Handle new insertion
+    if request.method == "POST" and request.form.get("part1"):
+        part1 = request.form.get("part1", "").strip()
+        part2 = request.form.get("part2", "").strip()
+        if part1 and part2:
+            user_text = f"I am {part1} and I LOVE {part2}"
+            emb = model.encode([user_text])[0].tolist()
+            new_record = insert_record(user_text, emb)
+            return redirect(url_for('index', query_id=new_record['id']))
 
-    original_list = [row["text"] for row in data]
-    sorted_list   = []  # Only populate after POST
+    # If a query_id is provided (or fallback to last)
+    if selected_id is None and original_list:
+        selected_id = original_list[-1]['id']
 
-    if request.method == "POST":
-        # 2) Read the form field. We'll have a single input named "user_text".
-        user_text = request.form.get("user_text", "").strip()
-        if user_text:
-            # 3) Compute HF embedding (list of floats)
-            new_emb = get_hf_embedding(user_text)
-
-            # 4) Insert into Supabase
-            insert_payload = {
-                "text": user_text,
-                "embedding": new_emb,
-                # created_at will default to now()
-            }
-            supabase.table("entries").insert(insert_payload).execute()
-
-            # 5) Re-fetch ALL entries (so that the newest is at the end)
-            supa_resp = (
-                supabase
-                .table("entries")
-                .select("id, text, embedding, created_at")
-                .order("created_at", {"ascending": True})
-                .execute()
-            )
-            data = supa_resp.data
-            original_list = [row["text"] for row in data]
-
-            # 6) Build semantic sorting
-            #    - The “query” is always the last row we just inserted
-            query_record = data[-1]
-            query_emb = np.array(query_record["embedding"], dtype=float)
-
-            #    - All previous records:
-            prev_records = data[:-1]
-            if prev_records:
-                prev_texts = [r["text"] for r in prev_records]
-                prev_embs = np.vstack([np.array(r["embedding"], dtype=float) for r in prev_records])
-
-                # Cosine similarity = (u⋅v) / (||u|| * ||v||)
-                query_norm = np.linalg.norm(query_emb)
-                prev_norms = np.linalg.norm(prev_embs, axis=1)
-                sims = (prev_embs @ query_emb) / (prev_norms * query_norm + 1e-10)
-
-                # Sort indices in descending order of similarity
+    if selected_id:
+        # find the query record
+        query_items = [r for r in data if r['id'] == selected_id]
+        if query_items:
+            query_rec = query_items[0]
+            query_emb = np.array(query_rec['embedding'])
+            # all others
+            others = [r for r in data if r['id'] != selected_id]
+            if others:
+                texts = [r['text'] for r in others]
+                embs = np.vstack([np.array(r['embedding']) for r in others])
+                q_norm = np.linalg.norm(query_emb)
+                norms = np.linalg.norm(embs, axis=1)
+                sims = (embs @ query_emb) / (norms * q_norm + 1e-10)
                 idxs = np.argsort(sims)[::-1]
-
-                # Build sorted_list: [ newest text, then prev_texts in order of descending sim ]
-                sorted_list = [query_record["text"]] + [prev_texts[i] for i in idxs]
+                sorted_list = [query_rec] + [others[i] for i in idxs]
             else:
-                # No previous entries => only the new one
-                sorted_list = [query_record["text"]]
+                sorted_list = [query_rec]
 
-    # 7) Render template with both lists (if sorted_list is empty, template will show placeholder)
     return render_template(
         "index.html",
         original_list=original_list,
-        sorted_list=sorted_list
+        sorted_list=sorted_list,
+        selected_id=selected_id
     )
 
+@app.route("/delete/<int:record_id>", methods=["POST"])
+def delete(record_id):
+    delete_record(record_id)
+    return redirect(url_for('index'))
+
 if __name__ == "__main__":
-    # Run Flask on http://127.0.0.1:5000
     app.run(debug=True)

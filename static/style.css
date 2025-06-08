@@ -146,3 +146,63 @@ h1 {
   font-style: italic;
   color: var(--text-dark);
 }
+
+/* ─── Delete Button ────────────────────────────────────────────────────────── */
+.list-section .item-row {
+  position: relative;
+}
+
+.delete-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.list-section .item-row:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  color: var(--pink-strong);
+}
+
+/* ─── Selector Form & Dropdown ─────────────────────────────────────────────── */
+.selector-form {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.selector-form label {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  margin-right: 0.5rem;
+}
+
+.selector-form select {
+  padding: 0.4rem 0.6rem;
+  border: 2px solid var(--teal);
+  border-radius: 8px;
+  background-color: var(--bg-light);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.selector-form select:hover {
+  border-color: var(--pink-strong);
+}
+
+.selector-form select:focus {
+  outline: none;
+  border-color: var(--pink-strong);
+  background-color: var(--cream);
+}
