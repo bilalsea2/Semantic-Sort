@@ -15,13 +15,7 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = Flask(__name__)
-model = None
-def get_model():
-    global model
-    if model is None:
-        from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer("all-MiniLM-L6-v2")
-    return model
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
 def fetch_all_records():
@@ -87,7 +81,7 @@ def index():
         part2 = request.form.get("part2", "").strip()
         if part1 and part2:
             user_text = f"I am {part1} and I LOVE {part2}"
-            emb = get_model().encode([user_text])[0].tolist()
+            emb = model.encode([user_text])[0].tolist()
             new_record = insert_record(user_text, emb)
             return redirect(url_for('index', query_id=new_record['id']))
 
