@@ -7,7 +7,7 @@ This guide shows how to get the Flask semantic-sorting playground running locall
 ## 1. Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/semantic-playground.git
+git clone https://github.com/bilalsns/Semantic-Sort.git
 cd semantic-playground
 ```
 
