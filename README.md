@@ -6,10 +6,6 @@ A semantic matching algorithm used to rank user-submitted sentences based on the
 
 For a step-by-step local build guide, see the [USAGE](USAGE.md)
 
-Or, [click here](https://semantic-sort.onrender.com/) 
-
-*app is deployed on Render's free tier; if you want to see cool stuff coming, leave a star (o|*
-
 ## Algorithm Steps
 
 1. **Data Representation**
